@@ -1,0 +1,27 @@
+0.1.8: DL: 577 (05.02.2017 16:00)
+[*]API Bump to Homestead (100018)
+
+0.1.9: DL: 2580 (22.05.2017 22:38)
+[*]API Bump to Morrowind (100019)
+
+0.2.0: DL: 3082 (28.05.2017 18:45)
+[*]This version is now standalone and requires no other addons. If used together with Combat Metrics, fight tracking resources will be shared for optimal performance. 
+[*]Removed obsolete settings. 
+
+0.2.1: DL: 3,700 (06.06.2017 00:41)
+[*]Fixed an issue with the shown combat time. 
+
+0.2.2: DL: 5,001 (04.07.2017 02:32)
+[*]Fixed an issue where wardens were shown with the templar icon.
+[*]Lib updated
+
+0.2.3: DL: 6,561 (13.08.2017) 20:40
+[*]API Bump to Horns of the Reach (100020)
+[*]Fixed some leaked global variables. 
+
+0.2.4: DL: 10,393 (05.01.2018) 19:52
+[*]API Bump to Clockwork City (100021)
+[*]Updated LibAddonMenu to version 2.0 r25 to fix an issue
+
+0.2.5: DL: 10,816 (07.01.2018) 13:40
+[*]Fixed an issue where the background transparancy was not recovered correctly after login/reloadui.
