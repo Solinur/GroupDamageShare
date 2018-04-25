@@ -84,11 +84,11 @@ function handler:SetDebug(isdebug)
 end
 
 local fightdata = {}
-function FightRecapCallback(_, DPSOut, _, HPSOut, _, _, dpstime) --DPSOut, DPSIn, hps, HPSIn, dpstime
+function FightRecapCallback(_, data) --DPSOut, DPSIn, hps, HPSIn, dpstime
 
-	fightdata.DPSOut 	= DPSOut
-	fightdata.HPSOut	= HPSOut
-	fightdata.dpstime	= dpstime
+	fightdata.DPSOut 	= data.DPSOut
+	fightdata.HPSOut	= data.HPSOut
+	fightdata.dpstime	= data.dpstime
 	
 end
 
