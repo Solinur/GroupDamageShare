@@ -1,5 +1,5 @@
 ﻿## Title: GroupDamageShare
-## APIVersion: 100021
+## APIVersion: 100022 100023
 ## Author: Solinur/decay
 ## Version: 0.2.6
 ## DependsOn:
