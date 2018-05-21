@@ -28,3 +28,7 @@
 
 0.2.6: DL: 15,094 (25.04.2018) 13:40
 [*]updated internal libraries (used already by Combat Metrics)
+
+0.2.7: DL: 16,890 (21.05.2018) 16:16
+[*]API Bump to Summerset (100023)
+[*]Update LAM to r26
