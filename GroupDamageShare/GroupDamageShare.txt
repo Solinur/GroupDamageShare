@@ -1,7 +1,7 @@
 ﻿## Title: GroupDamageShare
 ## APIVersion: 100023
 ## Author: Solinur/decay
-## Version: 0.2.7
+## Version: 0.2.8
 ## DependsOn:
 ## OptionalDependsOn: LibStub LibGroupSocket LibAddonMenu-2.0 CombatMetrics FoundryTacticalCombat AUI
 ## SavedVariables: GroupDamageShare_Save

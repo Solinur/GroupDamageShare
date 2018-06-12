@@ -32,3 +32,6 @@
 0.2.7: DL: 16,890 (21.05.2018) 16:16
 [*]API Bump to Summerset (100023)
 [*]Update LAM to r26
+
+0.2.8: DL: 18,911 (12.06.2018) 22:45
+[*]Added brazilian portugese translatiuon by mlsevero. Big thanks!
