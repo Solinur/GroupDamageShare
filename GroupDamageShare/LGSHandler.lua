@@ -22,7 +22,7 @@ if(not handler) then return end
 local LC = LibStub:GetLibrary("LibCombat")
 if LC == nil then return end 
 
-local ON_DATA_UPDATE = "OnDataUpdate"
+local ON_DATA_UPDATE = "OnCombatStatsDataUpdate" -- change this string if you copy this code !
 
 local MIN_SEND_TIMEOUT = 2
 local MIN_COMBAT_SEND_TIMEOUT = 2

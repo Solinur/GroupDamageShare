@@ -35,3 +35,6 @@
 
 0.2.8: DL: 18,911 (12.06.2018) 22:45
 [*]Added brazilian portugese translatiuon by mlsevero. Big thanks!
+
+0.2.9: DL: 19,833 (16.06.2018) 14:04
+[*]Try to fix an incompatibility introduced by RaidTools
