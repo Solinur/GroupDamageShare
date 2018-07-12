@@ -91,7 +91,6 @@ function LeakyBucket:GetTokensLeft()
 
     local delta = (now - self.lastCheck) / 1000
     self.left = math.min(self.left + delta * self.generatedTokens, self.size);
-    d(self.left)
     self.lastCheck = now
     return self.left
 end

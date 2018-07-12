@@ -17,7 +17,7 @@ local LGS = LibStub("LibGroupSocket")
 local type, version = LGS.MESSAGE_TYPE_COMBATSTATS, 2
 local handler, db = LGS:RegisterHandler(type, version)
 
-if(not handler) then return end
+if (not handler) then return end
 
 local LC = LibStub:GetLibrary("LibCombat")
 if LC == nil then return end 
@@ -80,10 +80,17 @@ function handler:UnregisterForValueChanges(callback)
 end
 
 function handler:SetDebug(isdebug)
+
 	debugon = isdebug
+	
+end
+
+function handler:SetRole(isheal)
+	db.isheal = isheal
 end
 
 local fightdata = {}
+
 function FightRecapCallback(_, data) --DPSOut, DPSIn, hps, HPSIn, dpstime
 
 	fightdata.DPSOut 	= data.DPSOut
@@ -96,7 +103,7 @@ local function GetDHPSData()
 	
 	if fightdata.DPSOut == nil then return end
 
-	return fightdata.DPSOut , fightdata.HPSOut, fightdata.dpstime, db.ishealer
+	return fightdata.DPSOut , fightdata.HPSOut, fightdata.dpstime, db.isheal
 
 end
 

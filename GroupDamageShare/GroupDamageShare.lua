@@ -319,7 +319,8 @@ function GDS.MakeMenu()
 			default = def.ishealer,
 			getFunc = function() return db.ishealer end,
 			setFunc = function(value) 
-						db.ishealer = value  				
+						db.ishealer = value 
+						GDS.SetRole(value)
 					  end,
 		},
 		{
@@ -505,7 +506,14 @@ function GDS:Initialize(event, addon)
 	
 	local LGS = LibStub("LibGroupSocket")
 	local dataHandler = LGS:GetHandler(LGS.MESSAGE_TYPE_COMBATSTATS)
-	dataHandler.db.ishealer = db.ishealer
+	
+	GDS.handler = dataHandler
+	
+	function GDS.SetRole(isheal) 
+		dataHandler:SetRole(isheal)
+	end
+	
+	GDS.SetRole(db.ishealer)
 
 	dataHandler:RegisterForValueChanges(GDS.OnUpdate)
 	
@@ -527,6 +535,15 @@ function GDS:Initialize(event, addon)
 	GDS.onGroupChange()
 	
 	SLASH_COMMANDS["/gds"] = GDS.Slash
+	
+	local origd = d
+	
+	function d(...)
+	
+		assert(false)
+		origd(...)
+		
+	end
 end
 
 -- Finally, we'll register our event handler function to be called when the proper event occurs.
