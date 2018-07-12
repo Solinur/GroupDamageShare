@@ -38,3 +38,7 @@
 
 0.2.9: DL: 19,833 (16.06.2018) 14:04
 [*]Try to fix an incompatibility introduced by RaidTools
+
+0.2.10: DL: 22,168 (12.07.2018) 23:48
+[*]Updated libraries. This should allow to use this addon alongside other addons that share information via pings without getting kicked. Some pings will not be send however and it is theoretically possible that pings from an addon won't be sent at all (if another addon is hogging the maximum amount of pings possible).
+[*]Fixed sending of HPS

@@ -8,7 +8,7 @@ local activelyhidden = false
 -- Addon Namespace
 GDS = GDS or {}
 GDS.name 		= "GroupDamageShare"
-GDS.version 	= "0.2.9"
+GDS.version 	= "0.2.10"
 
 local function Print(message, ...)
 	if db.debug then df("[%s] %s", GDS.name, message:format(...)) end
@@ -535,15 +535,6 @@ function GDS:Initialize(event, addon)
 	GDS.onGroupChange()
 	
 	SLASH_COMMANDS["/gds"] = GDS.Slash
-	
-	local origd = d
-	
-	function d(...)
-	
-		assert(false)
-		origd(...)
-		
-	end
 end
 
 -- Finally, we'll register our event handler function to be called when the proper event occurs.

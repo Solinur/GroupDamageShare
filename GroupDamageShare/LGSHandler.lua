@@ -24,8 +24,8 @@ if LC == nil then return end
 
 local ON_DATA_UPDATE = "OnCombatStatsDataUpdate" -- change this string if you copy this code !
 
-local MIN_SEND_TIMEOUT = 2
-local MIN_COMBAT_SEND_TIMEOUT = 2
+local MIN_SEND_TIMEOUT = 1150
+local MIN_COMBAT_SEND_TIMEOUT = 1150
 
 local Log = LGS.Log
 local SKIP_CREATE = true
@@ -96,6 +96,7 @@ function FightRecapCallback(_, data) --DPSOut, DPSIn, hps, HPSIn, dpstime
 	fightdata.DPSOut 	= data.DPSOut
 	fightdata.HPSOut	= data.HPSOut
 	fightdata.dpstime	= data.dpstime
+	fightdata.hpstime	= data.hpstime
 	
 end
 
@@ -103,7 +104,7 @@ local function GetDHPSData()
 	
 	if fightdata.DPSOut == nil then return end
 
-	return fightdata.DPSOut , fightdata.HPSOut, fightdata.dpstime, db.isheal
+	return fightdata.DPSOut , fightdata.HPSOut, db.isheal and fightdata.hpstime or fightdata.dpstime, db.isheal
 
 end
 
@@ -218,7 +219,7 @@ function handler:Send()
 	end
 
 	if(not db.enabled or not IsUnitGrouped("player")) then return end
-	local now = GetTimeStamp()
+	local now = GetGameTimeMilliseconds()
 	local timeout = IsUnitInCombat("player") and MIN_COMBAT_SEND_TIMEOUT or MIN_SEND_TIMEOUT
 	
 	if(now - lastSendTime < timeout) then return end
@@ -278,7 +279,7 @@ end
 
 local function StartSending()
 	if (not isActive and db.enabled and IsUnitGrouped("player") and IsUnitInCombat("player")) then
-		EVENT_MANAGER:RegisterForUpdate("LibGroupSocketDamageHandler", 1000, OnUpdate)
+		EVENT_MANAGER:RegisterForUpdate("LibGroupSocketDamageHandler", MIN_SEND_TIMEOUT, OnUpdate)
 		isActive = true
 	end
 end
