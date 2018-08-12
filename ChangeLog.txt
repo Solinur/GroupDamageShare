@@ -44,5 +44,8 @@
 [*]Fixed sending of HPS
 
 0.2.11: DL: 24,367 (13.08.2018) 01:12
+[*]skipped
+
+0.2.12: DL: 24,380 (13.08.2018) 01:36
 [*]API Bump to Wolfhunter (100024)
 [*]Updated LibGPS

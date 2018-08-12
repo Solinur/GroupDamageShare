@@ -8,7 +8,7 @@ local activelyhidden = false
 -- Addon Namespace
 GDS = GDS or {}
 GDS.name 		= "GroupDamageShare"
-GDS.version 	= "0.2.10"
+GDS.version 	= "0.2.12"
 
 local function Print(message, ...)
 	if db.debug then df("[%s] %s", GDS.name, message:format(...)) end
