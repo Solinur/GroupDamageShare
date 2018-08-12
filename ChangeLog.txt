@@ -42,3 +42,7 @@
 0.2.10: DL: 22,168 (12.07.2018) 23:48
 [*]Updated libraries. This should allow to use this addon alongside other addons that share information via pings without getting kicked. Some pings will not be send however and it is theoretically possible that pings from an addon won't be sent at all (if another addon is hogging the maximum amount of pings possible).
 [*]Fixed sending of HPS
+
+0.2.11: DL: 24,367 (13.08.2018) 01:12
+[*]API Bump to Wolfhunter (100024)
+[*]Updated LibGPS
