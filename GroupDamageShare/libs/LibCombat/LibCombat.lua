@@ -14,7 +14,7 @@ Idea: Life and Death
 local _
 
 --Register with LibStub
-local MAJOR, MINOR = "LibCombat", 10
+local MAJOR, MINOR = "LibCombat", 11
 local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end --the same or newer version of this lib is already loaded into memory
 
@@ -30,7 +30,7 @@ local reset = false
 local data = {skillBars= {}}
 local showdebug = false --or GetDisplayName() == "@Solinur"
 local dev = GetDisplayName() == "@Solinur" -- or GetDisplayName() == "@Solinur"
-local timeout = 500
+local timeout = 800
 local activetimeonheals = true
 local ActiveCallbackTypes = {}
 lib.ActiveCallbackTypes = ActiveCallbackTypes
@@ -116,11 +116,20 @@ local CustomAbilityName = {
 	
 local CustomAbilityIcon = {}
 
+local AbilityNameCache = {}
+
 local function GetFormattedAbilityName(id)
 
-	if id == nil then return "" end
-
-	local name = CustomAbilityName[id] or zo_strformat(SI_ABILITY_NAME, GetAbilityName(id))
+	if id == nil then return "" end	
+	
+	local name = AbilityNameCache[id]
+	
+	if name == nil then 
+	
+		name = CustomAbilityName[id] or zo_strformat(SI_ABILITY_NAME, GetAbilityName(id))
+		AbilityNameCache[id] = name
+		
+	end  
 	
 	return name
 	
@@ -361,7 +370,6 @@ function UnitHandler:Initialize(name, id, unitType)
 	self.name = name				-- name
 	self.unitType = unitType		-- type of unit: group, pet or boss
 	self.isFriendly = false
-	self.id = id
 	self.damageOutTotal = 0
 	self.groupDamageOut  = 0
 	self.dpsstart = nil 				-- start of dps in ms
@@ -379,7 +387,7 @@ end
 
 function FightHandler:Initialize()
 	self.char = data.playername
-	self.combatstart = 0-timeout-1		-- start of combat in ms
+	self.combatstart = 0 - timeout - 1	-- start of combat in ms
 	self.combatend = -150				-- end of combat in ms
 	self.combattime = 0 				-- total combat time
 	self.dpsstart = nil 				-- start of dps in ms
@@ -844,15 +852,15 @@ function FightHandler:GetNewStats(timems)
 	
 	timems = timems or GetGameTimeMilliseconds()
 	
-	if timems - lastGetNewStatsCall < 100 then 
+	local lastcalldelta = timems - lastGetNewStatsCall
 	
-		em:RegisterForUpdate("COMBATMETRICS_GETNEWSTATS", 100, function() self:GetNewStats() end)
+	if lastcalldelta < 100 then 
+	
+		em:RegisterForUpdate("COMBATMETRICS_GETNEWSTATS", (100 - lastcalldelta), function() self:GetNewStats() end)
 	
 		return 
 		
 	end
-
-	if self.prepared == nil then self:PrepareFight() return end
 
 	if NonContiguousCount(ActiveCallbackTypes[LIBCOMBAT_EVENT_PLAYERSTATS]) == 0 then return end
 	
@@ -1458,7 +1466,9 @@ local function onWeaponSwap(_, _)
 	
 	GetCurrentSkillBars()
 	
-	if data.inCombat == true then  
+	local inCombat = currentfight.prepared
+	
+	if inCombat == true then  
 	
 		local timems = GetGameTimeMilliseconds()
 		lib.cm:FireCallbacks(("LibCombat"..LIBCOMBAT_EVENT_MESSAGES), LIBCOMBAT_EVENT_MESSAGES, timems, LIBCOMBAT_MESSAGE_WEAPONSWAP, data.bar)
@@ -1613,7 +1623,7 @@ local function CombatEventHandler(isheal, _ , result , _ , _ , _ , _ , sourceNam
 	
 	local eventid = LIBCOMBAT_EVENT_DAMAGE_OUT + (isheal and 3 or 0) + ((isout and isin) and 2 or isin and 1 or 0)
 
-	if currentfight.dpsstart == nil then currentfight:GetNewStats(timems) end -- get stats before the damage event
+	if currentfight.dpsstart == nil then currentfight:PrepareFight() end -- get stats before the damage event
 	
 	damageType = (isheal and powerType) or damageType
 	

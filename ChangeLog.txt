@@ -49,3 +49,6 @@
 0.2.12: DL: 24,380 (13.08.2018) 01:36
 [*]API Bump to Wolfhunter (100024)
 [*]Updated LibGPS
+
+0.2.13: DL: 27,769 (21.10.2018) 20:03
+[*]API Bump to Murkmire (100025)
