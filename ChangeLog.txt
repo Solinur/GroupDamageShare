@@ -52,3 +52,6 @@
 
 0.2.13: DL: 27,769 (21.10.2018) 20:03
 [*]API Bump to Murkmire (100025)
+
+0.2.14: DL: 29,045 (26.10.2018) 20:52
+[*]Fix an issue with embedded libraries
