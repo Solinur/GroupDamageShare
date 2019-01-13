@@ -1,7 +1,7 @@
 ﻿## Title: GroupDamageShare
 ## APIVersion: 100025
 ## Author: Solinur/decay
-## Version: 0.2.14
+## Version: 0.3.0
 ## AddOnVersion: 214
 ## DependsOn: LibCombat LibAddonMenu-2.0 LibStub LibMapPing LibGPS LibGroupSocket
 ## OptionalDependsOn: CombatMetrics

@@ -14,14 +14,11 @@
 					<Dimensions x="350" y="200" />
 					<Anchor point="TOPLEFT"/>
 					
-					<Controls>				
-						
-						<Line name="$(parent)Separator" thickness="2" color="FFFFFFFF" hidden="true" layer="1"/>	
+					<Controls>
 						
 						<Backdrop name="$(parent)Bg" centerColor="DD000000" edgeColor="EE000000">
 							
-							<Anchor point="TOPLEFT" offsetX="0" offsetY="0" />
-							<Anchor point="BOTTOMRIGHT" offsetX="0" offsetY="0" />
+							<AnchorFill/>
 							
 							<Edge edgeSize="2" />
 						
@@ -29,7 +26,7 @@
 						
 						<Texture name="$(parent)IconClose" textureFile="GroupDamageShare/icons/deleteiconover.dds" mouseEnabled="true">
 							
-							<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="$(parent)Bg" offsetX="-5" offsetY="1" />
+							<Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" relativeTo="$(parent)Bg" offsetX="-5" offsetY="0" />
 							<Dimensions x="28" y="28"/>
 							
 							<OnMouseUp>
@@ -93,22 +90,28 @@
 							</OnInitialized>
 							
 						</Texture>
-						
+						 
 						<Label name="$(parent)Label" horizontalAlignment="LEFT" verticalAlignment="CENTER" font="GDSFontGameBig" text="DPS">
 							
 							<Anchor point="TOPLEFT" relativePoint="TOPLEFT" relativeTo="$(parent)Bg" offsetX="5" offsetY="4" />
-							<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$(parent)SelectRole" offsetX="0" offsetY="-4" />
+							<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$(parent)SelectRole" offsetX="-4" offsetY="-1" />
 						
 						</Label>
 						
-						<Backdrop name="$(parent)TitleSep" edgeColor="FFFFFF">
+						<Line name="$(parent)TitleSep" thickness="1" color="FFFFFFFF" layer="1">
 							
 							<Anchor point="TOPLEFT" relativeTo="$(parent)Bg" offsetX="5" offsetY="31" />
 							<Anchor point="TOPRIGHT" relativeTo="$(parent)Bg" offsetX="-5" offsetY="31" />
 							
-							<Edge edgeSize="1" />
+						</Line>
+						
+						<Line name="$(parent)BlockSep" thickness="2" color="AAFFFFFF" hidden="true" layer="1">
 							
-						</Backdrop>
+							<Anchor point="TOPLEFT" relativeTo="$(parent)Bg" offsetX="5" offsetY="30" />
+							<Anchor point="TOPRIGHT" relativeTo="$(parent)Bg" offsetX="-5" offsetY="30" />
+							
+						</Line>
+						
 					</Controls>
 				</Control>
 			</Controls>

@@ -17,7 +17,7 @@ local activelyHidden = false
 -- Addon Namespace
 GDS = GDS or {}
 GDS.name 		= "GroupDamageShare"
-local addonVersion 	= "0.2.14"
+local addonVersion 	= "0.3.0"
 
 local function Print(message, ...)
 
@@ -86,7 +86,7 @@ local function GetGrowthAnchor(item)
 	
 	local anchor = {TOPLEFT, item, BOTTOMLEFT, 0, 2}
 	
-	if item == nil then anchor = {TOPLEFT, tlw:GetNamedChild("Sep"), BOTTOMLEFT, 0, 4} end
+	if item == nil then anchor = {TOPLEFT, tlw:GetNamedChild("TitleSep"), BOTTOMLEFT, 0, 4} end
 	
 	return anchor
 end
@@ -104,7 +104,7 @@ local function AddSeparator()
 	sep:SetAnchor(unpack(newanchor))
 	
 	newanchor = GetGrowthAnchor(sep)
-	newanchor[5] = newanchor[5] + 2 + dx
+	newanchor[5] = newanchor[5] + 3 + dx
 
 end
 	
@@ -699,7 +699,7 @@ local function MakeMenu()
 		
 			for i = 1, maxbars do
 			
-				NewItem("", {name = "Player"..i, isSelf = i == 1, class = i, value = maxbars - i + 1, dpstime = maxbars - i + 1}, maxbars, maxbars, false)
+				NewItem("", {name = "Player"..i, isSelf = i == 1, class = i, value = (maxbars - i + 1)*1337, dpstime = maxbars - i + 1}, maxbars*1337, maxbars, false)
 				
 			end
 			
@@ -709,7 +709,7 @@ local function MakeMenu()
 		
 		for i = 1, maxbars2 do
 		
-			NewItem("", {name = "Player"..i, isSelf = i == 1, class = i, value = maxbars2 - i + 1, dpstime = maxbars2 - i + 1}, maxbars2, maxbars2, true)
+			NewItem("", {name = "Player"..i, isSelf = i == 1, class = i + 8, value = (maxbars2 - i + 1)*1337, dpstime = maxbars2 - i + 1}, maxbars2*1337, maxbars2, true)
 			
 		end
 	end
@@ -753,7 +753,7 @@ function Initialize(event, addon)
 	MakeMenu()
 		
 	tlw = GROUPDAMAGESHARE_TLW	
-	sep = tlw:GetNamedChild("Separator")
+	sep = tlw:GetNamedChild("BlockSep")
 	local wrapper = tlw:GetParent()
 	
 	local window = db.window
