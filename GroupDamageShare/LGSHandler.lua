@@ -19,8 +19,8 @@ local handler, db = LGS:RegisterHandler(type, version)
 
 if (not handler) then return end
 
-local LC = LibStub:GetLibrary("LibCombat")
-if LC == nil then return end 
+local LibCombat = LibStub:GetLibrary("LibCombat")
+if LibCombat == nil then return end 
 
 local ON_DATA_UPDATE = "OnCombatStatsDataUpdate" -- change this string if you copy this code !
 
@@ -106,8 +106,9 @@ function handler:SetRole(isheal)
 end
 
 local fightdata = {}
+handler.fightdata = fightdata
 
-function FightRecapCallback(_, data) --DPSOut, DPSIn, hps, HPSIn, dpstime
+local function FightRecapCallback(_, data) --DPSOut, DPSIn, hps, HPSIn, dpstime
 
 	fightdata.DPSOut 	= data.DPSOut
 	fightdata.HPSOut	= data.HPSOut
@@ -118,7 +119,7 @@ end
 
 local function GetDHPSData()
 	
-	if db.isheal and fightdata.HPSOut ~= nil then
+	if db.isheal and fightdata.HPSOut ~= nil then	
 		
 		return fightdata.HPSOut, fightdata.hpstime, true
 	
@@ -269,7 +270,7 @@ local function StopSending()
 	end
 end
 
-function handler:Send()
+function handler:Send()	
 
 	if sendFinalUpdate then
 	
@@ -287,8 +288,6 @@ function handler:Send()
 	if (now - lastFullUpdate) > 3 * timeout or sendFinalUpdate then sendFullUpdate = true end
 
 	local value, activeTime, isheal = GetDHPSData()
-
-	local value = (isheal and hps) or dps
 
 	if value == nil then return end
 	
@@ -350,7 +349,6 @@ function handler:Send()
 		needFullUpdate = false
 		
 	end
-	
 end
 
 local function OnUpdate()
@@ -476,7 +474,7 @@ local function Load()
 		end
 	)
 	
-	LC:RegisterCallbackType(LIBCOMBAT_EVENT_FIGHTRECAP, FightRecapCallback, GDS.name)
+	LibCombat:RegisterCallbackType(LIBCOMBAT_EVENT_FIGHTRECAP, FightRecapCallback, GDS.name)
 end
 
 if handler.Unload then handler.Unload() end

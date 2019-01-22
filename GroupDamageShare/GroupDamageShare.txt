@@ -4,7 +4,7 @@
 ## Version: 0.3.0
 ## AddOnVersion: 300
 ## DependsOn: LibStub LibAddonMenu-2.0 LibGroupSocket LibMapPing LibGPS
-## OptionalDependsOn: 
+## OptionalDependsOn: LibCombat
 ## SavedVariables: GroupDamageShare_Save
 
 ## This Add-on is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. 

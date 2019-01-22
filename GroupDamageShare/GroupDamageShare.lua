@@ -9,6 +9,7 @@ local SetRole
 local ShowItems
 local ClearItems
 local SetDebug
+local OnUIUpdate
 local currentdata = {}
 local dx = 1/GetSetting(SETTING_TYPE_UI, UI_SETTING_CUSTOM_SCALE) --Get UI Scale to draw thin lines correctly
 UI_SCALE = dx
@@ -102,6 +103,15 @@ local function AddSeparator()
 	newanchor[4] = -4
 	
 	sep:SetAnchor(unpack(newanchor))
+	
+	newanchor = GetGrowthAnchor(sep)
+	newanchor[5] = newanchor[5] + 3 + dx
+
+end
+
+local function ShowSeparator()
+	
+	sep:SetHidden(false)
 	
 	newanchor = GetGrowthAnchor(sep)
 	newanchor[5] = newanchor[5] + 3 + dx
@@ -274,9 +284,13 @@ end
 
 -- EVENT_EFFECT_CHANGED ( eventCode,  changeType,  effectSlot,  effectName,  unitTag,  beginTime,  endTime,  stackCount,  iconName,  buffType,  effectType,  abilityType,  statusEffectType,  unitName,  unitId,  abilityId) 
 
-function OnUpdate(unitTag, value, isHeal, dpstime, isSelf, class)
+local function OnUpdate(unitTag, value, isHeal, dpstime, isSelf, class)
 
-	local unit = currentdata.currentfight.units[unitTag] or {}
+	local units = currentdata.currentfight.units
+	
+	units[unitTag] = units[unitTag] or {}
+	
+	local unit = units[unitTag]
 	
 	unit.isHeal = isHeal
 	unit.value = value
@@ -297,8 +311,8 @@ function OnUpdate(unitTag, value, isHeal, dpstime, isSelf, class)
 	currentdata.lastUpdate = GetTimeStamp()
 end
 
-local function DrawBars(isHeal, maxBars)
-
+local function DrawBars(isHeal, maxBars, data)
+	
 	if data == nil or data.units == nil then return end
 	
 	local maxvalue = 1
@@ -323,12 +337,12 @@ local function DrawBars(isHeal, maxBars)
 	
 		if unit.isHeal == isHeal then
 		
-			NewItem(unitTag, unit, maxvalue, maxtime, false)
+			NewItem(unitTag, unit, maxvalue, maxtime, isHeal)
 			
 		end
-	end
 	
-	if drawnBars >= maxBars then return end 
+		if drawnBars >= maxBars then break end 
+	end
 end
 
 function OnUIUpdate()
@@ -341,11 +355,11 @@ function OnUIUpdate()
 	local maxbarsDPS = db.maxItemsDPS
 	local maxbarsHeal = db.maxItemsHeal	
 	
-	if maxbarsDPS > 0 then DrawBars(false, maxBars) end
+	if maxbarsDPS > 0 then DrawBars(false, maxbarsDPS, data) end
 	
-	if maxbarsDPS > 0 and maxbarsHeal > 0 then AddSeparator() else sep:SetHidden(true) end
+	if maxbarsDPS > 0 and maxbarsHeal > 0 then ShowSeparator() else sep:SetHidden(true) end
 	
-	if maxbarsHeal > 0 then DrawBars(true, maxBars) end
+	if maxbarsHeal > 0 then DrawBars(true, maxbarsHeal, data) end
 	
 	tlw:GetNamedChild("Label"):SetText(data.time)
 	
