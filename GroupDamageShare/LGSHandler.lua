@@ -228,7 +228,8 @@ local function OnData(unitTag, data, isSelf) --needs to be updated
 		
 		dpstime, index = LGS:ReadUint16(data, index)
 		
-		dpstime = dpstime/10
+		dpstime = math.max(dpstime/10, 0)
+		
 		bits = {}
 		
 		for i = 1, 4 do
@@ -257,7 +258,18 @@ local function OnData(unitTag, data, isSelf) --needs to be updated
 
 	--if debugon then Log("Value: %d, Heal: %s, Source: %d, Time: %d, Self: %s", value, tostring(isheal), source, dpstime, tostring(isSelf)) end
 	
-	LGS.cm:FireCallbacks(ON_DATA_UPDATE, unitTag, value, isheal, dpstime, isSelf, class)
+	local data = {
+	
+		unitTag = unitTag, 
+		value 	= value, 
+		isHeal 	= isheal, 
+		dpstime = dpstime, 
+		isSelf  = isSelf, 
+		class   = class,
+		
+	}
+	
+	LGS.cm:FireCallbacks(ON_DATA_UPDATE, data)
 end
 
 local function StopSending()

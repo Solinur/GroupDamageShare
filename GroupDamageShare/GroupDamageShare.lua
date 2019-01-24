@@ -11,6 +11,8 @@ local ClearItems
 local SetDebug
 local OnUIUpdate
 local currentdata = {}
+dpsbars = {}
+healbars = {}
 local dx = 1/GetSetting(SETTING_TYPE_UI, UI_SETTING_CUSTOM_SCALE) --Get UI Scale to draw thin lines correctly
 UI_SCALE = dx
 local activelyHidden = false
@@ -109,28 +111,16 @@ local function AddSeparator()
 
 end
 
-local function ShowSeparator()
-	
-	sep:SetHidden(false)
-	
-	newanchor = GetGrowthAnchor(sep)
-	newanchor[5] = newanchor[5] + 3 + dx
+local function UpdateItem(item, unitData, maxvalue, maxtime, heal)
 
-end
-	
-local function NewItem(unitTag, unitData, maxvalue, maxtime, heal)  -- Adds an item to the list,
-	
 	local alpha = unitData.isSelf and 1 or 0.7
-	
-	local item, key = pool:AcquireObject()
-	
-	item.key = key
 	
 	local barsize1 = (unitData.value or 1) / (maxvalue or 1) * db.window.width
 	local barsize2 = (unitData.dpstime or 1) / (maxtime or 1) * db.window.width * 0.4
 	
 	local iconcolor
 	
+	local unitTag = unitData.unitTag
 	local classId = unitData.class
 	
 	if classId > 16 then	-- classId holds info for the used class and the main resource (magicka / stamina). If larger then 16 prefered source is not known
@@ -149,41 +139,26 @@ local function NewItem(unitTag, unitData, maxvalue, maxtime, heal)  -- Adds an i
 		
 	end
 	
-	item:SetHidden(false)
-	item:SetAnchor(unpack(newanchor))
-	
-	local font = ZO_CachedStrFormat("<<1>>|<<2>>|<<3>>", "EsoUI/Common/Fonts/Univers57.otf", db.window.height - (3 * dx), "soft-shadow-thin")
-	
 	local unitName = db.useAccountNames and GetDisplayName(unitTag) or ZO_CachedStrFormat(SI_UNIT_NAME, GetUnitName(unitTag))
 	
 	if unitName == "" then unitName = unitData.name end
 	
 	local label = item:GetNamedChild("Label")
 	local icon = item:GetNamedChild("Icon")
-	local bg = item:GetNamedChild("Bg")
-	local bg2 = item:GetNamedChild("Bg2")
 	local bar = item:GetNamedChild("Bar")
 	local bar2 = item:GetNamedChild("Bar2")
 	local value = item:GetNamedChild("Value")
 	local timevalue = item:GetNamedChild("Time")
 	
-	label:SetText(unitName)
-	label:SetFont(font)
+	label:SetText(unitName)	
 	
-	local width = db.window.width	
-	local height = db.window.height	
 	local icontex = classIconTex[classId]
 	
-	icon:SetDimensions(height, height)
 	icon:SetTexture(icontex)
 	icon:SetColor(unpack(iconcolor))
 	
-	bg:SetEdgeTexture("", 1, 1, 1)
-	bg:SetDimensions(width, height)
-	
-	bg2:SetEdgeTexture("", 1, 1, 1)
-	bg2:SetDimensions(width * 0.4, height)
-	
+	local width = db.window.width	
+	local height = db.window.height	
 	local barcolor = heal and db.color3 or db.color
 	
 	bar:SetDimensions(barsize1, height)
@@ -191,20 +166,58 @@ local function NewItem(unitTag, unitData, maxvalue, maxtime, heal)  -- Adds an i
 	
 	local barcolor2 = db.color2
 	
-	bar2:SetDimensions(barsize2,db.window.height)
+	bar2:SetDimensions(barsize2, height)
 	bar2:SetColor(barcolor2.r, barcolor2.g, barcolor2.b, alpha)
+	
+	value:SetText(unitData.value or 1000)
+	
+	timevalue:SetText((unitData.dpstime or 10) .. " s")
+	
+	item:SetHidden(false)	
+
+end
+	
+local function NewItem()  -- Adds an item to the list,
+	
+	local item, key = pool:AcquireObject()
+	
+	item.key = key
+	
+	item:SetAnchor(unpack(newanchor))
+	
+	local font = ZO_CachedStrFormat("<<1>>|<<2>>|<<3>>", "EsoUI/Common/Fonts/Univers57.otf", db.window.height - (3 * dx), "soft-shadow-thin")
+	
+	local label = item:GetNamedChild("Label")
+	local icon = item:GetNamedChild("Icon")
+	local bg = item:GetNamedChild("Bg")
+	local bg2 = item:GetNamedChild("Bg2")
+	local value = item:GetNamedChild("Value")
+	local timevalue = item:GetNamedChild("Time")
+	
+	label:SetFont(font)
+	
+	local width = db.window.width	
+	local height = db.window.height	
+	
+	icon:SetDimensions(height, height)
+	
+	bg:SetEdgeTexture("", 1, 1, 1)
+	bg:SetDimensions(width, height)
+	
+	bg2:SetEdgeTexture("", 1, 1, 1)
+	bg2:SetDimensions(width * 0.4, height)
 	
 	value:SetHeight(height)
 	value:SetFont(font)
-	value:SetText(unitData.value or 1000)	
 	
 	timevalue:SetHeight(height)
 	timevalue:SetFont(font)
-	timevalue:SetText((unitData.dpstime or 10) .. " s")
 	
 	newanchor = GetGrowthAnchor(item)  -- new anchor for the next item 
+	
+	item.Update = UpdateItem
 
-	return key
+	return item
 end
 
 local function Toggle(show)
@@ -284,20 +297,11 @@ end
 
 -- EVENT_EFFECT_CHANGED ( eventCode,  changeType,  effectSlot,  effectName,  unitTag,  beginTime,  endTime,  stackCount,  iconName,  buffType,  effectType,  abilityType,  statusEffectType,  unitName,  unitId,  abilityId) 
 
-local function OnUpdate(unitTag, value, isHeal, dpstime, isSelf, class)
+local function OnUpdate(data)
 
 	local units = currentdata.currentfight.units
 	
-	units[unitTag] = units[unitTag] or {}
-	
-	local unit = units[unitTag]
-	
-	unit.isHeal = isHeal
-	unit.value = value
-	unit.isSelf = isSelf
-	unit.class = class
-	
-	if dpstime and dpstime > 0 then unit.dpstime = dpstime end
+	units[data.unitTag] = data
 	
 	currentdata.page = 0
 	
@@ -311,85 +315,91 @@ local function OnUpdate(unitTag, value, isHeal, dpstime, isSelf, class)
 	currentdata.lastUpdate = GetTimeStamp()
 end
 
-local function DrawBars(isHeal, maxBars, data)
+local function UpdateBars(isHeal, units)
 	
-	if data == nil or data.units == nil then return end
+	if units == nil then return end
 	
-	local maxvalue = 1
+	local maxvalue
 	local maxtime = 1
 	
-	local units = data.units
-
-	local drawnBars = 0
+	local sortedUnits = {}
 	
-	for unitTag, unit in pairs(units) do 
+	local i = 1
+	
+	for _, unit in spairs(units, function(t,a,b) return t[a]["value"] > t[b]["value"] end) do 
 	
 		if unit.isHeal == isHeal then
 		
-			maxvalue = math.max(unit.value, maxvalue)
+			maxvalue = maxvalue or unit.value
 			maxtime = math.max(unit.dpstime or 0, maxtime)
+			
+			sortedUnits[#sortedUnits+1] = unit
 			
 		end
 		
 	end	
 	
-	for unitTag, unit in spairs(units, function(t,a,b) return t[a]["value"] > t[b]["value"] end) do 
+	local bars = isHeal and healbars or dpsbars
 	
-		if unit.isHeal == isHeal then
+	for i = 1, #bars do
+	
+		local unit = sortedUnits[i]
+	
+		if unit then 
 		
-			NewItem(unitTag, unit, maxvalue, maxtime, isHeal)
+			bars[i]:Update(unit, maxvalue, maxtime, isHeal) 
+			
+		else
+		
+			bars[i]:SetHidden(true)
 			
 		end
 	
-		if drawnBars >= maxBars then break end 
 	end
 end
 
 function OnUIUpdate()
 
-	local data = (currentdata.page == 0 and currentdata.currentfight) or currentdata.lastfights[currentdata.page]
-	
-	pool:ReleaseAllObjects()
-	newanchor = GetGrowthAnchor()
-	
-	local maxbarsDPS = db.maxItemsDPS
-	local maxbarsHeal = db.maxItemsHeal	
-	
-	if maxbarsDPS > 0 then DrawBars(false, maxbarsDPS, data) end
-	
-	if maxbarsDPS > 0 and maxbarsHeal > 0 then ShowSeparator() else sep:SetHidden(true) end
-	
-	if maxbarsHeal > 0 then DrawBars(true, maxbarsHeal, data) end
-	
-	tlw:GetNamedChild("Label"):SetText(data.time)
-	
 	if (GetTimeStamp() - currentdata.lastUpdate) > 3 then 
 	
 		if active then
 		
-			Print("Stop Update")
 			EVENT_MANAGER:UnregisterForUpdate(GDS.name.."LiveUpdate")
 			active = false
 			
 		end
 		
 	end
+
+	if tlw:IsHidden() then return end
+
+	local data = (currentdata.page == 0 and currentdata.currentfight) or currentdata.lastfights[currentdata.page]
+	
+	local units
+	
+	if data then units = data.units end
+	
+	if #dpsbars > 0 then UpdateBars(false, units) end
+	
+	if #healbars > 0 then UpdateBars(true, units) end
+	
 end
 
 function onCombatStart()
 
 	--if IsUnitDead("player") then return end
 	
-	Print("Combat Start")
-	
 	currentdata.page = 0
+	
+	ClearItems()
 	
 	currentdata.currentfight = {units = {}}
 	
-	currentdata.currentfight.time = GetDateStringFromTimestamp(GetTimeStamp())..", "..GetTimeString()
+	local currenttime = GetDateStringFromTimestamp(GetTimeStamp())..", "..GetTimeString()
 	
-	pool:ReleaseAllObjects()
-	newanchor = GetGrowthAnchor()
+	currentdata.currentfight.time = currenttime	
+	
+	tlw:GetNamedChild("Label"):SetText(currenttime)	
 	
 end
 
@@ -689,6 +699,18 @@ local function MakeMenu()
 	
 	function ClearItems()
 	
+		for i, item in pairs(dpsbars) do item:SetHidden(true) end
+		for i, item in pairs(healbars) do item:SetHidden(true) end
+		
+	end
+	
+	local function ResetItems()
+	
+		ClearItems()
+		
+		dpsbars = {}
+		healbars = {}
+	
 		if currentdata.inCombat then return end
 		pool:ReleaseAllObjects()
 		newanchor = GetGrowthAnchor()
@@ -700,36 +722,73 @@ local function MakeMenu()
 	
 		if currentpanel ~= true and currentpanel ~= addonpanel then return end
 		
-		ClearItems()
+		ResetItems()
 		GROUPDAMAGESHARE_WRAPPER:SetHidden(false)
 		Toggle("true")
 		
 		tlw:SetDimensions(db.window.width * 1.4, 2 * db.window.height)
 		
-		local maxbars = db.maxItemsDPS
-		local maxbars2 = db.maxItemsHeal
+		local maxItemsDPS = db.maxItemsDPS
+		local maxItemsHeal = db.maxItemsHeal
 		
-		if maxbars > 0 then 
+		if maxItemsDPS > 0 then 			
 		
-			for i = 1, maxbars do
+			local maxValue = maxItemsDPS*1337
+			local maxTime = maxItemsDPS
+			local isheal = false
+		
+			for i = 1, maxItemsDPS do
 			
-				NewItem("", {name = "Player"..i, isSelf = i == 1, class = i, value = (maxbars - i + 1)*1337, dpstime = maxbars - i + 1}, maxbars*1337, maxbars, false)
+				local displaydata = {
 				
+					name = "Player"..i, 
+					unittag = "",
+					isSelf = i == 1, 
+					class = i, 
+					value = (maxItemsDPS - i + 1)*1337, 
+					dpstime = maxItemsDPS - i + 1
+					
+				}
+			
+				local newbar = NewItem()
+				dpsbars[i] = newbar
+				
+				newbar:Update(displaydata, maxValue, maxTime, isheal)				
 			end
 			
 		end
 		
-		if maxbars > 0 and maxbars2 > 0 then AddSeparator() else sep:SetHidden(true) end
+		if maxItemsDPS > 0 and maxItemsHeal > 0 then AddSeparator() else sep:SetHidden(true) end
 		
-		for i = 1, maxbars2 do
+		if maxItemsHeal > 0 then
 		
-			NewItem("", {name = "Player"..i, isSelf = i == 1, class = i + 8, value = (maxbars2 - i + 1)*1337, dpstime = maxbars2 - i + 1}, maxbars2*1337, maxbars2, true)
+			local maxValue = maxItemsHeal*1337
+			local maxTime = maxItemsHeal
+			local isheal = true
+		
+			for i = 1, maxItemsHeal do
 			
+				local displaydata = {
+				
+					name = "Player"..i, 
+					unittag = "",
+					isSelf = i == 1, 
+					class = i, 
+					value = (maxItemsHeal - i + 1)*1337, 
+					dpstime = maxItemsHeal - i + 1
+					
+				}
+			
+				local newbar = NewItem()
+				healbars[i] = newbar
+				
+				newbar:Update(displaydata, maxValue, maxTime, isheal)				
+			end
 		end
 	end
 	
 	CALLBACK_MANAGER:RegisterCallback("LAM-PanelOpened", ShowItems )
-	CALLBACK_MANAGER:RegisterCallback("LAM-PanelClosed", ClearItems )
+	CALLBACK_MANAGER:RegisterCallback("LAM-PanelClosed", HideItems )
 	
 	return menu, panel
 end
