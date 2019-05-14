@@ -55,3 +55,11 @@
 
 0.2.14: DL: 29,045 (26.10.2018) 20:52
 [*]Fix an issue with embedded libraries
+
+0.3.0: DL: 38,630 (13.05.2019) 22:06
+[*]Changed UI to display DPS and heal simultaneously
+[*]Added option to show account names
+[*]Reorganized settings
+[*]Reorganized libraries. They are now included as standalone.
+[*]Updated libraries
+[*]Some minor fixes and improvements

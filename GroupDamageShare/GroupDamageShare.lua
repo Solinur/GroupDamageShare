@@ -20,7 +20,7 @@ local activelyHidden = false
 -- Addon Namespace
 GDS = GDS or {}
 GDS.name 		= "GroupDamageShare"
-local addonVersion 	= "0.3.0"
+local addonVersion 	= "0.3.1"
 
 local function Print(message, ...)
 
@@ -139,7 +139,7 @@ local function UpdateItem(item, unitData, maxvalue, maxtime, heal)
 		
 	end
 	
-	local unitName = db.useAccountNames and GetDisplayName(unitTag) or ZO_CachedStrFormat(SI_UNIT_NAME, GetUnitName(unitTag))
+	local unitName = db.useAccountNames and GetUnitDisplayName(unitTag) or ZO_CachedStrFormat(SI_UNIT_NAME, GetUnitName(unitTag))
 	
 	if unitName == "" then unitName = unitData.name end
 	
@@ -417,7 +417,7 @@ function onCombatEnd()
 
 	if currentdata.inCombat or SCENE_MANAGER:IsShowingNext("GROUPDAMAGESHARE_MOVE_SCENE") then return end
 	
-	Print("Combat End")
+	-- Print("Combat End")
 	
 	SaveData(currentdata.currentfight)
 	currentdata.page = 1

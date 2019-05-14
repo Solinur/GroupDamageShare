@@ -19,7 +19,7 @@ local handler, db = LGS:RegisterHandler(type, version)
 
 if (not handler) then return end
 
-local LibCombat = LibStub:GetLibrary("LibCombat")
+local LibCombat = LibCombat
 if LibCombat == nil then return end 
 
 local ON_DATA_UPDATE = "OnCombatStatsDataUpdate" -- change this string if you copy this code !
