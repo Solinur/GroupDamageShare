@@ -14,7 +14,7 @@ This addon requires the following libraries:
 
 They are included in the release and have to be enabled in the AddOns panel ingame.
 
-** Please note that currently only one addon with sharing of Information (DPS, Ultimae, Resources ... ) can be active.**
+**Please note that currently only one addon with sharing of Information (DPS, Ultimae, Resources ... ) can be active.**
 
 **Group Damage Share** is an attempt to provide a feature that was unique to [FTC](http://www.esoui.com/downloads/info28-FoundryTacticalCombatFTC.html).  
 
