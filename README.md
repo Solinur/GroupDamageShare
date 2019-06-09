@@ -18,7 +18,7 @@ They are included in the release and have to be enabled in the AddOns panel inga
 
 **Group Damage Share** is an attempt to provide a feature that was unique to [FTC](http://www.esoui.com/downloads/info28-FoundryTacticalCombatFTC.html).  
 
-It uses pings on the map to comunicate with the addon from another player to transmit your current DPS or HPS values. (for more details on this refer to the description of [LibGroupSocket](http://www.esoui.com/downloads/info1337-LibGroupSocket.html)). With **Group Damage Share** you can watch during the fight how the DPS/HPS of your groupmembers develops. 
+It uses pings on the map to comunicate with the addon from another player to transmit your current DPS or HPS values. For more details on this refer to the description of [LibGroupSocket](http://www.esoui.com/downloads/info1337-LibGroupSocket.html). With **Group Damage Share** you can watch during the fight how the DPS/HPS of your groupmembers develops. 
 
 Please note that this addon cannot show the DPS of group members who don't use this addon [B][COLOR="Yellow"]and[/COLOR][/B] enable sharing. 
 Setup + Installation:
@@ -27,7 +27,7 @@ Setup + Installation:
 * Create a group
 * Go to the group window and click on "LibGroupSocket sending" so that it says "On"
 * For now settings are spread to two places (in the usual addon settings area): "Group Damage Share" and "LibGroupSocket"
-* If you want to turn sending on permanently you need to install [URL="http://www.esoui.com/downloads/info1337-LibGroupSocket.html"]LibGroupSocket[/URL] as a standalone version. Refer to the description for more details.
+* If you want to turn sending on permanently you need to install [LibGroupSocket](http://www.esoui.com/downloads/info1337-LibGroupSocket.html) as a standalone version. Refer to the description for more details.
 
 
 Current features
