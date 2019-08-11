@@ -1,9 +1,10 @@
 ## Title: LibGPS
 ## Author: sirinsidiator & votan
-## Version: 2.0 r16
-## APIVersion: 100024 100025
-## AddonVersion: 16
-## DependsOn: LibStub LibMapPing
+## Version: 2.0 r17
+## APIVersion: 100026 100027
+## AddOnVersion: 17
+## IsLibrary: true
+## DependsOn: LibMapPing
 ##
 ## This Add-on is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. 
 ## The Elder Scrolls® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. 

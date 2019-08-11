@@ -12,9 +12,8 @@ Idea: Life and Death
 
 local _
 
---Register with LibStub
 local lib = {}
-
+lib.version = 19
 LibCombat = lib
 
 --aliases
@@ -25,7 +24,7 @@ local _
 local db
 local reset = false
 local data = {skillBars= {}}
-lib.debug = false or GetDisplayName() == "@Solinur"
+lib.debug = false --or GetDisplayName() == "@Solinur"
 local timeout = 800
 local activetimeonheals = true
 local ActiveCallbackTypes = {}
@@ -38,9 +37,21 @@ local lastdeaths = {}
 local SlotSkills = {}
 local IdToReducedSlot = {}
 local lastskilluses = {}
-local isInShadowWorld = false	-- used to prevent fight reset in Cloudrest when using a portal.
+local isInShadowWorld = false	-- used to prevent fight reset in Cloudrest/Sunspire when using a portal.
 
 local lastBossHealthValue = 2
+
+-- localize some functions for performance
+
+local stringformat = string.format
+local stringsub = string.sub
+local stringmatch = string.match
+local mathfloor = math.floor
+local mathmax = math.max
+local mathmin = math.min
+local mathabs = math.abs
+
+local ZO_CachedStrFormat = ZO_CachedStrFormat
 
 -- types of callbacks: Units, DPS/HPS, DPS/HPS for Group, Logevents
 
@@ -356,7 +367,7 @@ local MajorForceAbility = {		-- All AbilityId's that cause Major Force. Used to 
 	[86472] = true,
 	[86476] = true,
 	[88891] = true,
-	[112345] = true,
+	[120013] = true,
 
 }
 
@@ -421,96 +432,7 @@ local SpecialDebuffs = {   -- debuffs that the API doesn't show via EVENT_EFFECT
 
 }
 
-local abilityConversions = {	-- Ability conversions for tracking skill activations
-
-	[29012] = {48744}, -- Dragon Leap --> CC Immunity
-	[32719] = {48753}, -- Take Flight --> CC Immunity
-	[32715] = {48760}, -- Ferocious Leap --> CC Immunity
-
-	[29043] = {92507}, -- Molten Weapons --> Major Sorcery
-	[31874] = {92503}, -- Igneous Weapons --> Major Sorcery
-	[31888] = {92512}, -- Molten Armaments --> Major Sorcery
-
-	[23234] = {51392}, -- Bolt Escape --> Bolt Escape Fatigue
-	[23236] = {51392}, -- Streak --> Bolt Escape Fatigue
-
-	[33375] = {90587}, -- Blur --> Major Evasion
-	[35414] = {90593}, -- Mirage --> Major Evasion
-	[35419] = {90620}, -- Double Take --> Major Evasion
-
-	[25375] = {25376}, -- Shadow Cloak --> Shadow Cloak
-	[25380] = {25381}, -- Shadowy Disguise --> Shadowy Disguise
-
-	[86122] = {86224}, -- Frost Cloak --> Major Resolve
-	[86126] = {88758}, -- Expansive Frost Cloak --> Major Resolve
-	[86130] = {88761}, -- Ice Fortress --> Major Resolve
-
-	[22178] = {22179}, -- Sun Shield --> Sun Shield
-	[22182] = {22183}, -- Radiant Ward --> Radiant Ward
-	[22180] = {49091}, -- Blazing Shield --> Blazing Shield
-					 
-	[22149] = {48532}, -- Focused Charge --> Charge Snare
-	[22161] = {48532}, -- Explosive Charge --> Charge Snare
-	[15540] = {48532}, -- Toppling Charge --> Charge Snare
-					 
-	[26209] = {26220}, -- Restoring Aura --> Minor Magickasteal
-	[26807] = {26809}, -- Radiant Aura --> Minor Magickasteal
-	[26821] = {34366}, -- Repentance --> Repentance
-					 
-	[22304] = {22307}, -- Healing Ritual --> Healing Ritual
-	[22327] = {22331}, -- Ritual of Rebirth --> Ritual of Rebirth
-	[22314] = {22318}, -- Hasty Prayer --> Hasty Prayer
-					 
-	[28448] = {28450}, -- Critical Charge --> Critical Strike
-	[38788] = {38789}, -- Stampede --> Critical Strike
-	[38778] = {38781}, -- Critical Rush --> Critical Strike
-					 
-	[28719] = {48532}, -- Shield Charge --> Charge Snare
-	[38401] = {48532}, -- Shielded Assault --> Charge Snare
-	[38405] = {38408}, -- Invasion --> Invasion
-					 
-	[83600] = {85156}, -- Lacerate --> Lacerate
-	[85187] = {85192}, -- Rend --> Rend
-	[85179] = {85182}, -- Thrive in Chaos --> Thrive in Chaos
-					 
-	[29173] = {53881}, -- Weakness to Elements --> Major Breach
-	[39089] = {62775}, -- Elemental Susceptibility --> Major Breach
-	[39095] = {62787}, -- Elemental Drain --> Major Breach
-					 
-	[40116] = {88606}, -- Quick Siphon --> Minor Lifesteal
-					 
-	[29556] = {63015}, -- Evasion --> Major Evasion
-	[39195] = {63019}, -- Shuffle --> Major Evasion
-	[39192] = {63030}, -- Elude --> Major Evasion
-					 
-	[32632] = {48532}, -- Pounce --> Charge Snare
-	[39105] = {48532}, -- Brutal Pounce --> Charge Snare
-	[39104] = {48532}, -- Feral Pounce --> Charge Snare
-
-	[103503] = {103521}, -- Accelerate --> Minor Force
-	[103503] = {103712}, -- Race Against Time --> Minor Force
-
-	[103478] = {108609}, -- Undo --> Undo
-	[103557] = {108621}, -- Precognition --> Precognition
-	[103564] = {108641}, -- Temporal Guard --> Temporal Guard
-
-	[38566] = {101161}, -- Rapid Maneuver --> Major Expedition
-	[40211] = {101169}, -- Retreating Maneuver --> Major Expedition
-	[40215] = {101178}, -- Charging Maneuver --> Major Expedition
-
-	[61503] = {61504}, -- Vigor --> Vigor
-	[61505] = {61506}, -- Echoing Vigor --> Echoing Vigor
-	[61507] = {61509}, -- Resolving Vigor --> Resolving Vigor
-
-	[38563] = {38564}, -- War Horn --> War Horn
-	[40223] = {40224}, -- Aggressive Horn --> Aggressive Horn
-	[40220] = {40221}, -- Sturdy Horn --> Sturdy Horn
-
-	[38571] = {38572}, -- Purge --> Purge
-	[40232] = {40233}, -- Efficient Purge --> Purge
-}
-
-local abilityConversions27 = {	-- Ability conversions for tracking skill activations Elsweyr
+local abilityConversions = {	-- Ability conversions for tracking skill activations Elsweyr
 
 	[22178] = {22179, 2240, nil, nil}, --Sun Shield --> Sun Shield
 	[22182] = {22183, 2240, nil, nil}, --Radiant Ward --> Radiant Ward
@@ -617,7 +539,122 @@ local abilityConversions27 = {	-- Ability conversions for tracking skill activat
 
 }
 
-if GetAPIVersion() > 100026 then abilityConversions = abilityConversions27 end
+local abilityConversions28 = {	-- Ability conversions for tracking skill activations Elsweyr
+
+	[22178] = {22179, 2240, nil, nil}, --Sun Shield --> Sun Shield
+	[22182] = {22183, 2240, nil, nil}, --Radiant Ward --> Radiant Ward
+	[22180] = {49091, 2240, nil, nil}, --Blazing Shield --> Blazing Shield
+
+	[22304] = {22307, 2240, nil, nil}, --Healing Ritual --> Healing Ritual
+	[22327] = {22331, 2240, nil, nil}, --Ritual of Rebirth --> Ritual of Rebirth
+	[22314] = {22318, 2240, nil, nil}, --Hasty Prayer --> Hasty Prayer
+
+	[26209] = {26220, 2240, nil, nil}, --Restoring Aura --> Minor Magickasteal
+	[26807] = {26809, 2240, nil, nil}, --Radiant Aura --> Minor Magickasteal
+	[26821] = {29824, 16, nil, nil}, --Repentance? --> Repentance?
+
+	[29173] = {53881, 2240, nil, nil}, --Weakness to Elements --> Major Breach
+	[39089] = {62775, 2240, nil, nil}, --Elemental Susceptibility --> Major Breach
+	[39095] = {62787, 2240, nil, nil}, --Elemental Drain --> Major Breach
+
+	[29556] = {63015, 2240, nil, nil}, --Evasion --> Major Evasion
+	[39195] = {63019, 2240, nil, nil}, --Shuffle --> Major Evasion
+	[39192] = {63030, 2240, nil, nil}, --Elude --> Major Evasion
+
+	[103492] = {103492, 2240, 103492, 2250}, --Meditate --> Meditate
+	[103652] = {103652, 2240, 103652, 2250}, --Deep Thoughts --> Deep Thoughts
+	[103665] = {103665, 2240, 103665, 2250}, --Introspection --> Introspection
+
+	[103503] = {103521, 2240, nil, nil}, --Accelerate --> Minor Force
+	[103706] = {103706, nil, 103707, 2240}, --Channeled Acceleration --> Minor Force
+	[103710] = {103712, nil, nil, nil}, --Race Against Time --> Minor Force
+
+	[103478] = {108609, 2240, nil, nil}, --Undo --> Undo
+	[103557] = {108621, 2240, nil, nil}, --Precognition --> Precognition
+	[103564] = {108641, 2240, nil, nil}, --Temporal Guard --> Temporal Guard
+
+	[61503] = {61504, 2240, nil, nil}, --Vigor --> Vigor
+	[61505] = {61506, 2240, nil, nil}, --Echoing Vigor --> Echoing Vigor
+	[61507] = {61509, 2240, nil, nil}, --Resolving Vigor --> Resolving Vigor
+
+	[38566] = {101161, 2240, nil, nil}, --Rapid Maneuver --> Major Expedition
+	[40211] = {101169, 2240, nil, nil}, --Retreating Maneuver --> Major Expedition
+	[40215] = {101178, 2240, nil, nil}, --Charging Maneuver --> Major Expedition
+
+	[38563] = {38564, 2240, nil, nil}, --War Horn --> War Horn
+	[40223] = {40224, 2240, nil, nil}, --Aggressive Horn --> Aggressive Horn
+	[40220] = {40221, 2240, nil, nil}, --Sturdy Horn --> Sturdy Horn
+
+	[28279] = {28279, 2200, 28279, 1}, --Uppercut --> Uppercut
+	[38814] = {38814, 2200, 38814, 1}, --Dizzying Swing --> Dizzying Swing
+	[38807] = {38807, 2200, 38807, 1}, --Wrecking Blow --> Wrecking Blow
+
+	[83600] = {85156, 2240, nil, nil}, --Lacerate --> Lacerate
+	[85187] = {85192, 2240, nil, nil}, --Rend --> Rend
+	[85179] = {85182, 2240, nil, nil}, --Thrive in Chaos --> Thrive in Chaos
+
+	[31531] = {31531, 2200, 88565, 2240}, --Force Siphon --> Force Siphon
+	[40109] = {40109, 2200, 88575, 2240}, --Siphon Spirit --> Siphon Spirit
+	[40116] = {88606, nil, nil, nil}, --Quick Siphon --> Minor Lifesteal
+
+	[29043] = {92507, 2240, nil, nil}, --Molten Weapons --> Major Sorcery
+	[31874] = {92503, 2240, nil, nil}, --Igneous Weapons --> Major Sorcery
+	[31888] = {92512, 2240, nil, nil}, --Molten Armaments --> Major Sorcery
+
+	[33375] = {90587, 2240, nil, nil}, --Blur --> Major Evasion
+	[35414] = {90593, 2240, nil, nil}, --Mirage --> Major Evasion
+	[35419] = {90620, 2240, nil, nil}, --Phantasmal Escape --> Major Evasion
+
+	[25375] = {25376, 2240, nil, nil}, --Shadow Cloak --> Shadow Cloak
+	[25380] = {25381, 2240, nil, nil}, --Shadowy Disguise --> Shadowy Disguise
+
+	[35445] = {35451, 2250, nil, nil}, --Shadow Image Teleport --> Shadow
+
+	[24584] = {nil, nil, 114903, 2250}, --Dark Exchange --> 
+	[24595] = {nil, nil, 114908, 2250}, --Dark Deal --> 
+	[24589] = {nil, nil, 114909, 2250}, --Dark Conversion --> 
+
+	[108840] = {108842, 2240, nil, nil}, --Summon Unstable Familiar --> Unstable Familiar Damage Pulse
+	[76076] = {76078, 16, nil, nil}, --Summon Unstable Clannfear --> Clannfear Heal
+	[77182] = {77187, 2240, nil, nil}, --Summon Volatile Familiar --> Volatile Famliiar Damage Pulsi
+
+	[108845] = {108846, 16, nil, nil}, --Winged Twilight Restore --> Winged Twilight Restore
+	[77140] = {77354, 2240, nil, nil}, --Summon Twilight Tormentor  --> Twilight Tormentor Enrage
+	[77369] = {77371, 16, nil, nil}, --Twilight Matriarch Restore --> Twilight Matriarch Restore
+
+	[23234] = {51392, 2240, nil, nil}, --Bolt Escape --> Bolt Escape Fatigue
+	[23236] = {51392, 2240, nil, nil}, --Streak --> Bolt Escape Fatigue
+
+	[85922] = {85925, 32, nil, nil}, --Budding Seeds --> Budding Seeds Heal
+
+	[86122] = {86224, 2240, nil, nil}, --Frost Cloak --> Major Resolve
+	[86126] = {88758, 2240, nil, nil}, --Expansive Frost Cloak --> Major Resolve
+	[86130] = {88761, 2240, nil, nil}, --Ice Fortress --> Major Resolve
+
+	[115238] = {119372, 2240, nil, nil}, --Bitter Harvest --> Bitter Harvest
+	[118623] = {118624, 2240, nil, nil}, --Deaden Pain --> Deaden Pain
+	[118639] = {121797, 2240, nil, nil}, --Necrotic Potency --> Necrotic Potency
+
+	[117690] = {117691, 2240, nil, nil}, --Blighted Blastbones --> Blighted Blastbones
+	[117749] = {117750, 2240, nil, nil}, --Stalking Blastbones --> Stalking Blastbones
+
+	--[115307] = {???, nil, nil, nil}, --Expunge --> 
+	[117940] = {117947, 2240, nil, nil}, --Expunge and Modify --> Expunge and Modify
+	--[117919] = {???, nil, nil, nil}, --Hexproof --> 
+
+	[88158] = {88163, 1, nil, nil}, --Materialize --> Materialize
+	
+	[28567] = {126370, 2240, nil, nil}, --Entropy --> Entropy
+	[40457] = {126374, 2240, nil, nil}, --Degeneration --> Degeneration
+	[40452] = {126371, 2240, nil, nil}, --Structured Entropy --> Structured Entropy
+
+	[26768] = {126891, 2240, nil, nil}, --Soul Trap --> Soul Trap
+	[40328] = {126894, 2240, nil, nil}, --Soul Splitting Trap --> Soul Splitting Trap
+	[40317] = {126898, 2240, nil, nil}, --Consuming Trap --> Consuming Trap
+
+}
+
+if GetAPIVersion() > 100027 then abilityConversions = abilityConversions28 end
 
 local DirectHeavyAttacks = {	-- for special handling to detect their end
 
@@ -713,19 +750,21 @@ function FightHandler:Initialize()
 	self.grplog = {}					-- log from group actions
 	self.groupDamageOut = 0				-- dmg from and to the group
 	self.groupDamageIn = 0				-- dmg from and to the group
-	self.groupHealOut = 0				-- heal of the group
-	self.groupHealIn = 0				-- heal of the group
+	self.groupHealingOut = 0				-- heal of the group
+	self.groupHealingIn = 0				-- heal of the group
 	self.groupDPSOut = 0				-- group dps
 	self.groupDPSIn = 0					-- incoming dps	on group
 	self.groupHPSOut = 0				-- group hps
 	self.groupHPSIn = 0					-- group hps
 	self.damageOutTotal = 0				-- total damage out
 	self.healingOutTotal = 0			-- total healing out
+	self.healingOutAbsolute = 0			-- total healing out including Overheal
 	self.damageInTotal = 0				-- total damage in
 	self.damageInShielded = 0			-- total damage in shielded
 	self.healingInTotal = 0				-- total healing in
 	self.DPSOut = 0						-- dps
 	self.HPSOut = 0						-- hps
+	self.HPSAOut = 0					-- hps including Overheal
 	self.DPSIn = 0						-- incoming dps			
 	self.HPSIn = 0						-- incoming hps		
 	self.group = data.inGroup
@@ -760,22 +799,29 @@ function lib.ResetFight()
 	currentfight:ResetFight()
 end
 
+local DivineSlots = {EQUIP_SLOT_HEAD, EQUIP_SLOT_SHOULDERS, EQUIP_SLOT_CHEST, EQUIP_SLOT_HAND, EQUIP_SLOT_WAIST, EQUIP_SLOT_LEGS, EQUIP_SLOT_FEET}
+
 local function GetShadowBonus()
 
 	local divines = 0
 
-	for i, key in pairs({EQUIP_SLOT_HEAD, EQUIP_SLOT_SHOULDERS, EQUIP_SLOT_CHEST, EQUIP_SLOT_HAND, EQUIP_SLOT_WAIST, EQUIP_SLOT_LEGS, EQUIP_SLOT_FEET}) do
+	for i, key in pairs(DivineSlots) do
 	
 		local trait, desc = GetItemLinkTraitInfo(GetItemLink(BAG_WORN, key, LINK_STYLE_DEFAULT))
 	
 		if trait == ITEM_TRAIT_TYPE_ARMOR_DIVINES then 
 		
-			divines = tonumber(desc:match("%d%.%d")) or tonumber(desc:match("%d,%d")) or 0 + divines
+			local bonus = desc:gsub("^.-(%d+)%p?(%d*)%s?.-$", "%1.%2")  	-- only get first argument to pass it to tonumber()
+		
+			divines = (tonumber(bonus) or 0) + divines
 
 		end 
+		
 	end
+		
+	data.critBonusMundus = mathfloor(13 * (1 + divines/100)) -- total mundus bonus, base is 13%
 	
-	data.critBonusMundus = math.floor(9 * (1 + divines/100)) -- total mundus bonus, base is 9%
+	Print("Shadow Mundus: %d%% (Divines Bonus: %1.f%%)", data.critBonusMundus, divines)
 	
 end
 
@@ -791,6 +837,8 @@ local function GetPlayerBuffs(timems)
 		return
 		
 	end
+		
+	data.critBonusMundus = 0
 	
 	for i=1,GetNumBuffs("player") do
 	
@@ -800,7 +848,7 @@ local function GetPlayerBuffs(timems)
 		
 		local unitType = castByPlayer and COMBAT_UNIT_TYPE_PLAYER or COMBAT_UNIT_TYPE_NONE
 		
-		local stacks = math.max(stackCount,1)
+		local stacks = mathmax(stackCount,1)
 		
 		local playerid = data.playerid
 		
@@ -857,12 +905,12 @@ local function GetCritBonusFromPassives()
 		
 		local skillType = lineData.skillTypeData.skillType
 		
-		if purchased == true then bonus = ability.effect[rank] or 0 end
+		bonus = purchased == true and ability.effect[rank] or 0
 	
 		if bonus > 0 then bonusdata[id] = {skillType, line, bonus, ability.requiresSkillFromLine} end
 	end
 	
-	return bonusdata
+	return bonusdata	
 	
 end
 
@@ -874,8 +922,8 @@ local function GetCritBonusFromCP()
 	local mightyValue = 0.25 * mightyCP * (2 - mightyCP) + (mightyCP - 1) * (mightyCP - 0.5) * mightyCP * 2/250
 	local elfbornValue = 0.25 * elfbornCP * (2 - elfbornCP) + (elfbornCP - 1) * (elfbornCP - 0.5) * elfbornCP * 2 / 250
 
-	mightyValue = math.floor(mightyValue * 100)
-	elfbornValue = math.floor(elfbornValue * 100)
+	mightyValue = mathfloor(mightyValue * 100)
+	elfbornValue = mathfloor(elfbornValue * 100)
 	
 	return mightyValue, elfbornValue
 end
@@ -1091,9 +1139,9 @@ function FightHandler:FinishFight()
 	self.combatend = timems
 	self.combattime = zo_round((timems - self.combatstart)/10)/100
 	
-	self.starttime = math.min(self.dpsstart or self.hpsstart or 0, self.hpsstart or self.dpsstart or 0)
-	self.endtime = math.max(self.dpsend or 0, self.hpsend or 0)
-	self.activetime = math.max((self.endtime - self.starttime) / 1000, 1)
+	self.starttime = mathmin(self.dpsstart or self.hpsstart or 0, self.hpsstart or self.dpsstart or 0)
+	self.endtime = mathmax(self.dpsend or 0, self.hpsend or 0)
+	self.activetime = mathmax((self.endtime - self.starttime) / 1000, 1)
 	
 	data.majorForce = 0
 	data.minorForce = 0	
@@ -1131,7 +1179,7 @@ local function GetCritbonus()
 			
 			bonus = isactive and bonus or 0
 		
-		end
+		end		
 		
 		passiveBonus = passiveBonus + bonus or 0
 		
@@ -1215,7 +1263,7 @@ function FightHandler:GetNewStats(timems)
 	
 	for statId, newValue in pairs(GetStats()) do
 	
-		if statId == LIBCOMBAT_STAT_SPELLCRIT or statId == LIBCOMBAT_STAT_WEAPONCRIT then newValue = math.min(newValue, maxcrit) end
+		if statId == LIBCOMBAT_STAT_SPELLCRIT or statId == LIBCOMBAT_STAT_WEAPONCRIT then newValue = mathmin(newValue, maxcrit) end
 		
 		local currentkey = statNamesCurrent[statId]
 		local maxkey = statNamesMax[statId]
@@ -1232,13 +1280,13 @@ function FightHandler:GetNewStats(timems)
 			lib.cm:FireCallbacks((CallbackKeys[LIBCOMBAT_EVENT_PLAYERSTATS]), LIBCOMBAT_EVENT_PLAYERSTATS, timems, newValue - stats[currentkey], newValue, statId)
 			
 			stats[currentkey] = newValue
-			stats[maxkey] = math.max(stats[maxkey] or newValue, newValue)
+			stats[maxkey] = mathmax(stats[maxkey] or newValue, newValue)
 			
 		end
 	end
 end
 
-function FightHandler:AddCombatEvent(timems, result, targetUnitId, value, eventid)
+function FightHandler:AddCombatEvent(timems, result, targetUnitId, value, eventid, overflow)
 
 	if eventid == LIBCOMBAT_EVENT_DAMAGE_OUT then 		--outgoing dmg
 	
@@ -1264,6 +1312,7 @@ function FightHandler:AddCombatEvent(timems, result, targetUnitId, value, eventi
 	elseif eventid == LIBCOMBAT_EVENT_HEAL_OUT then --outgoing heal
 	
 		self.healingOutTotal = self.healingOutTotal + value
+		self.healingOutAbsolute = self.healingOutAbsolute + value + (overflow or 0)
 		
 		if activetimeonheals then 
 		
@@ -1280,6 +1329,7 @@ function FightHandler:AddCombatEvent(timems, result, targetUnitId, value, eventi
 		
 		self.healingInTotal = self.healingInTotal + value
 		self.healingOutTotal = self.healingOutTotal + value
+		self.healingOutAbsolute = self.healingOutAbsolute + value + (overflow or 0)
 		
 		if activetimeonheals then 
 		
@@ -1294,23 +1344,25 @@ function FightHandler:UpdateStats()
 
 	if (self.dpsend == nil and self.hpsend == nil) or (self.dpsstart == nil and self.hpsstart == nil) then return end
 	
-	local dpstime = math.max(((self.dpsend or 1) - (self.dpsstart or 0)) / 1000, 1)
-	local hpstime = math.max(((self.hpsend or 1) - (self.hpsstart or 0)) / 1000, 1)
+	local dpstime = mathmax(((self.dpsend or 1) - (self.dpsstart or 0)) / 1000, 1)
+	local hpstime = mathmax(((self.hpsend or 1) - (self.hpsstart or 0)) / 1000, 1)
 	
 	self.dpstime = dpstime
 	self.hpstime = hpstime
 	
 	self:UpdateGrpStats()
 
-	self.DPSOut = math.floor(self.damageOutTotal / dpstime + 0.5)
-	self.HPSOut = math.floor(self.healingOutTotal / hpstime + 0.5)
-	self.DPSIn = math.floor(self.damageInTotal / dpstime + 0.5)
-	self.HPSIn = math.floor(self.healingInTotal / hpstime + 0.5)
+	self.DPSOut = mathfloor(self.damageOutTotal / dpstime + 0.5)
+	self.HPSOut = mathfloor(self.healingOutTotal / hpstime + 0.5)
+	self.HPSAOut = mathfloor(self.healingOutAbsolute / hpstime + 0.5)
+	self.DPSIn = mathfloor(self.damageInTotal / dpstime + 0.5)
+	self.HPSIn = mathfloor(self.healingInTotal / hpstime + 0.5)
 	
 	local data = {
 		["DPSOut"] = self.DPSOut, 
 		["DPSIn"] = self.DPSIn,  
 		["HPSOut"] = self.HPSOut,  
+		["HPSAOut"] = self.HPSAOut,  
 		["HPSIn"] = self.HPSIn,  
 		["healingOutTotal"] = self.healingOutTotal,  
 		["dpstime"] = dpstime,  
@@ -1339,7 +1391,7 @@ function FightHandler:UpdateGrpStats() -- called by onUpdate
 			
 			if (action=="heal" and unit and unit.isFriendly == true) then --only events of identified units are removed. The others might be identified later.
 				
-				self.groupHealOut = self.groupHealOut + value
+				self.groupHealingOut = self.groupHealingOut + value
 				table.remove(self.grplog,i)
 			
 			elseif unit and unit.isFriendly == false and action=="dmg" then
@@ -1360,11 +1412,11 @@ function FightHandler:UpdateGrpStats() -- called by onUpdate
 	local dpstime = self.dpstime
 	local hpstime = self.hpstime
 	
-	self.groupHealIn = self.groupHealOut
+	self.groupHealingIn = self.groupHealingOut
 	
-	self.groupDPSOut = math.floor(self.groupDamageOut / dpstime + 0.5)
-	self.groupDPSIn = math.floor(self.groupDamageIn / dpstime + 0.5)
-	self.groupHPSOut = math.floor(self.groupHealOut / hpstime + 0.5)
+	self.groupDPSOut = mathfloor(self.groupDamageOut / dpstime + 0.5)
+	self.groupDPSIn = mathfloor(self.groupDamageIn / dpstime + 0.5)
+	self.groupHPSOut = mathfloor(self.groupHealingOut / hpstime + 0.5)
 	
 	self.groupHPSIn = self.groupHPSOut
 	
@@ -1401,7 +1453,7 @@ function FightHandler:onUpdate()
 			if data.inGroup and Events.CombatGrp.active then
 			
 				Print("GrpDmg: %d (DPS: %d)", self.groupDamageOut, self.groupDPSOut)
-				Print("GrpHeal: %d (HPS: %d)", self.groupHealOut, self.groupHPS)
+				Print("GrpHeal: %d (HPS: %d)", self.groupHealingOut, self.groupHPS)
 				Print("GrpIncDmg: %d (IncDPS: %d)", self.groupDamageIn, self.groupDPSIn)
 				
 			end
@@ -1482,7 +1534,9 @@ local function onBossesChanged(_) -- Detect Bosses
 			data.bossnames[name] = i
 			currentfight.bossfight = true
 			
-		else return
+		elseif i >= 2 then
+		
+			return
 		
 		end
 	end
@@ -1539,8 +1593,8 @@ local function BuffEventHandler(isspecial, groupeffect, _, changeType, effectSlo
 
 	if BadAbility[abilityId] == true then return end
 
-	if unitTag and string.sub(unitTag, 1, 5) == "group" and AreUnitsEqual(unitTag, "player") then return end
-	if unitTag and string.sub(unitTag, 1, 11) ~= "reticleover" and (AreUnitsEqual(unitTag, "reticleover") or AreUnitsEqual(unitTag, "reticleoverplayer") or AreUnitsEqual(unitTag, "reticleovertarget")) then return end
+	if unitTag and stringsub(unitTag, 1, 5) == "group" and AreUnitsEqual(unitTag, "player") then return end
+	if unitTag and stringsub(unitTag, 1, 11) ~= "reticleover" and (AreUnitsEqual(unitTag, "reticleover") or AreUnitsEqual(unitTag, "reticleoverplayer") or AreUnitsEqual(unitTag, "reticleovertarget")) then return end
 
 	if (changeType ~= EFFECT_RESULT_GAINED and changeType ~= EFFECT_RESULT_FADED and (changeType ~= EFFECT_RESULT_UPDATED and stackCount > 1)) or unitName == "Offline" or unitId == nil then return end
 	
@@ -1550,8 +1604,8 @@ local function BuffEventHandler(isspecial, groupeffect, _, changeType, effectSlo
 	
 	-- Print("%d, %s, ET:%d, %d, %s", changeType, GetAbilityName(abilityId), effectType, abilityType, unitTag) 
 	
-	local eventid = groupeffect == GROUP_EFFECT_IN and LIBCOMBAT_EVENT_GROUPEFFECTS_IN or groupeffect == GROUP_EFFECT_OUT and LIBCOMBAT_EVENT_GROUPEFFECTS_OUT or string.sub(unitTag, 1, 6) == "player" and LIBCOMBAT_EVENT_EFFECTS_IN or LIBCOMBAT_EVENT_EFFECTS_OUT
-	local stacks = (isspecial and 0) or math.max(1, stackCount)
+	local eventid = groupeffect == GROUP_EFFECT_IN and LIBCOMBAT_EVENT_GROUPEFFECTS_IN or groupeffect == GROUP_EFFECT_OUT and LIBCOMBAT_EVENT_GROUPEFFECTS_OUT or stringsub(unitTag, 1, 6) == "player" and LIBCOMBAT_EVENT_EFFECTS_IN or LIBCOMBAT_EVENT_EFFECTS_OUT
+	local stacks = (isspecial and 0) or mathmax(1, stackCount)
 	
 	local inCombat = currentfight.prepared
 	
@@ -1973,7 +2027,7 @@ local function CombatEventHandler(isheal, _ , result , _ , _ , _ , _ , sourceNam
 	
 	damageType = (isheal and powerType) or damageType
 	
-	currentfight:AddCombatEvent(timems, result, targetUnitId, hitValue, eventid)
+	currentfight:AddCombatEvent(timems, result, targetUnitId, hitValue, eventid, overflow)
 	
 	lib.cm:FireCallbacks((CallbackKeys[eventid]), eventid, timems, result, sourceUnitId, targetUnitId, abilityId, hitValue, damageType, (overflow or 0))
 
@@ -2037,7 +2091,7 @@ end
 
 local function GetReducedSlotId(reducedslot)
 
-	local bar = math.floor(reducedslot/10) + 1
+	local bar = mathfloor(reducedslot/10) + 1
 
 	local slot = reducedslot%10
 	
@@ -2167,7 +2221,7 @@ local function onBossHealthChanged(eventid, unitTag, _, powerType, powerValue, p
 
 	lastBossHealthValue = BossHealthValue	
 	
-	local bossId = tonumber(string.match(unitTag, "boss(%d+)"))
+	local bossId = tonumber(stringmatch(unitTag, "boss(%d+)"))
 	
 	lib.cm:FireCallbacks((CallbackKeys[LIBCOMBAT_EVENT_BOSSHP]), LIBCOMBAT_EVENT_BOSSHP, timems, bossId, powerValue, powerMax)
 	
@@ -2333,9 +2387,9 @@ function EventHandler:UnregisterEvents()
 
 	for k,reg in pairs(self.data) do
 		
-		local incative = EVENT_MANAGER:UnregisterForEvent(lib.name..reg.id, reg.event)
+		local inactive = EVENT_MANAGER:UnregisterForEvent(lib.name..reg.id, reg.event)
 		
-		if incative then 
+		if inactive then 
 		
 			ZO_ClearTable(reg)
 			self.data[k] = nil 
@@ -2365,6 +2419,8 @@ local function GetAllCallbackTypes()
 	return t
 end
 
+if GetAPIVersion() > 100027 then EVENT_ACTION_SLOT_ABILITY_SLOTTED = EVENT_HOTBAR_SLOT_CHANGE_REQUESTED end
+
 Events.General = EventHandler:New(GetAllCallbackTypes()
 	,
 	function (self)
@@ -2375,6 +2431,7 @@ Events.General = EventHandler:New(GetAllCallbackTypes()
 		self:RegisterEvent(EVENT_PLAYER_ACTIVATED, onPlayerActivated)
 		self:RegisterEvent(EVENT_EFFECT_CHANGED, onMageExplode, REGISTER_FILTER_ABILITY_ID, 50184)
 		self:RegisterEvent(EVENT_EFFECT_CHANGED, onShadowWorld, REGISTER_FILTER_ABILITY_ID, 108045)
+		self:RegisterEvent(EVENT_EFFECT_CHANGED, onShadowWorld, REGISTER_FILTER_ABILITY_ID, 121216)
 		
 		if lib.debug == true then self:RegisterEvent(EVENT_COMBAT_EVENT, onCustomEvent, REGISTER_FILTER_COMBAT_RESULT, ACTION_RESULT_EFFECT_GAINED_DURATION, REGISTER_FILTER_IS_ERROR, false) end		
 		self.active = true
@@ -2711,8 +2768,8 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 	local color, text
 	
 	local timeValue = fight.combatstart < 0 and 0 or (logline[2] - fight.combatstart)/1000
-	local timeString = string.format("|ccccccc[%.3fs]|r", timeValue)
-	local stringFormat = logtype == LIBCOMBAT_EVENT_SKILL_TIMINGS and GetString("SI_LIBCOMBAT_LOG_FORMATSTRING_SKILLS", logline[5]) or GetString("SI_LIBCOMBAT_LOG_FORMATSTRING", logtype)
+	local timeString = stringformat("|ccccccc[%.3fs]|r", timeValue)
+	local logFormat = logtype == LIBCOMBAT_EVENT_SKILL_TIMINGS and GetString("SI_LIBCOMBAT_LOG_FORMATSTRING_SKILLS", logline[5]) or GetString("SI_LIBCOMBAT_LOG_FORMATSTRING", logtype)
 	
 	local units = fight.units
 
@@ -2730,7 +2787,7 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		local ability = GetAbilityString(abilityId, damageType, fontsize)
 		
 		color = {1.0,0.6,0.6}
-		text = ZO_CachedStrFormat(stringFormat, timeString, crit, targetString, ability, hitValue)
+		text = ZO_CachedStrFormat(logFormat, timeString, crit, targetString, ability, hitValue)
 		
 	elseif logtype == LIBCOMBAT_EVENT_DAMAGE_IN then
 	
@@ -2747,7 +2804,7 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		
 		color = {0.8,0.4,0.4}	
 		
-		text = ZO_CachedStrFormat(stringFormat, timeString, sourceName, crit, targetString, ability, hitValue)
+		text = ZO_CachedStrFormat(logFormat, timeString, sourceName, crit, targetString, ability, hitValue)
 				
 	elseif logtype == LIBCOMBAT_EVENT_DAMAGE_SELF then
 	
@@ -2761,7 +2818,7 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		local ability = GetAbilityString(abilityId, damageType, fontsize)
 		
 		color = {0.8,0.4,0.4}	
-		text = ZO_CachedStrFormat(stringFormat, timeString, crit, targetString, ability, hitValue)
+		text = ZO_CachedStrFormat(logFormat, timeString, crit, targetString, ability, hitValue)
 			
 	elseif logtype == LIBCOMBAT_EVENT_HEAL_OUT then
 		
@@ -2774,7 +2831,7 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		local ability = GetAbilityString(abilityId, "heal", fontsize)
 		
 		color = {0.6,1.0,0.6}
-		text = ZO_CachedStrFormat(stringFormat, timeString, crit, targetname, ability, hitValue)
+		text = ZO_CachedStrFormat(logFormat, timeString, crit, targetname, ability, hitValue)
 		
 	elseif logtype == LIBCOMBAT_EVENT_HEAL_IN then
 	
@@ -2787,7 +2844,7 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		local ability = GetAbilityString(abilityId, "heal", fontsize)
 		
 		color = {0.4,0.8,0.4}
-		text = ZO_CachedStrFormat(stringFormat, timeString, sourceName, crit, ability, hitValue)
+		text = ZO_CachedStrFormat(logFormat, timeString, sourceName, crit, ability, hitValue)
 		
 	elseif logtype == LIBCOMBAT_EVENT_HEAL_SELF then 
 	
@@ -2798,7 +2855,7 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		local ability = GetAbilityString(abilityId, "heal", fontsize)
 		
 		color = {0.8,1.0,0.6}		
-		text = ZO_CachedStrFormat(stringFormat, timeString, crit, ability, hitValue)
+		text = ZO_CachedStrFormat(logFormat, timeString, crit, ability, hitValue)
 		
 	elseif logtype == LIBCOMBAT_EVENT_EFFECTS_IN or logtype == LIBCOMBAT_EVENT_EFFECTS_OUT or logtype == LIBCOMBAT_EVENT_GROUPEFFECTS_IN or logtype == LIBCOMBAT_EVENT_GROUPEFFECTS_OUT then 
 	
@@ -2819,7 +2876,7 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		local buff = GetAbilityString(abilityId, colorKey, fontsize)
 		
 		color = {0.8,0.8,0.8}
-		text = ZO_CachedStrFormat(stringFormat, timeString, unitString, changeTypeString, buff, source)
+		text = ZO_CachedStrFormat(logFormat, timeString, unitString, changeTypeString, buff, source)
 		
 	elseif logtype == LIBCOMBAT_EVENT_RESOURCES then 		
 	
@@ -2848,14 +2905,14 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 			
 			local changeTypeString = ZO_CachedStrFormat("<<1>><<2>>|r", changeColor, changeString)
 			
-			local amount = powerValueChange~=0 and tostring(math.abs(powerValueChange)) or ""
+			local amount = powerValueChange~=0 and tostring(mathabs(powerValueChange)) or ""
 			
 			local resource = (powerType == POWERTYPE_MAGICKA and GetString(SI_ATTRIBUTES2)) or (powerType == POWERTYPE_STAMINA and GetString(SI_ATTRIBUTES3)) or (powerType == POWERTYPE_ULTIMATE and GetString(SI_LIBCOMBAT_LOG_ULTIMATE))
 			
 			local ability = abilityId and ZO_CachedStrFormat("(<<1>>)", GetAbilityString(abilityId, "resource", fontsize)) or ""
 			
 			color = (powerType == POWERTYPE_MAGICKA and {0.7,0.7,1}) or (powerType == POWERTYPE_STAMINA and {0.7,1,0.7}) or (powerType == POWERTYPE_ULTIMATE and {1,1,0.7})
-			text = ZO_CachedStrFormat(stringFormat, timeString, changeTypeString, amount, resource, ability)
+			text = ZO_CachedStrFormat(logFormat, timeString, changeTypeString, amount, resource, ability)
 		
 		else return
 		end
@@ -2870,15 +2927,15 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		
 		if statid == LIBCOMBAT_STAT_SPELLCRIT or statid == LIBCOMBAT_STAT_WEAPONCRIT then 
 		
-			value = string.format("%.1f%%", GetCriticalStrikeChance(newvalue))
-			change = string.format("%.1f%%", GetCriticalStrikeChance(statchange))
+			value = stringformat("%.1f%%", GetCriticalStrikeChance(newvalue))
+			change = stringformat("%.1f%%", GetCriticalStrikeChance(statchange))
 			
 		end
 		
 		if statid == LIBCOMBAT_STAT_SPELLCRITBONUS or statid == LIBCOMBAT_STAT_WEAPONCRITBONUS then 
 		
-			value = string.format("%.1f%%", newvalue)
-			change = string.format("%.1f%%", statchange)
+			value = stringformat("%.1f%%", newvalue)
+			change = stringformat("%.1f%%", statchange)
 			
 		end
 		
@@ -2902,7 +2959,7 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		end
 		
 		color = {0.8,0.8,0.8}
-		text = ZO_CachedStrFormat(stringFormat, timeString, stat, changeText, value, changeValueText)
+		text = ZO_CachedStrFormat(logFormat, timeString, stat, changeText, value, changeValueText)
 
 	elseif logtype == LIBCOMBAT_EVENT_MESSAGES then 
 	
@@ -2940,7 +2997,7 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		
 		color = {.9,.8,.7}
 		
-		text = ZO_CachedStrFormat(stringFormat, timeString, name)
+		text = ZO_CachedStrFormat(logFormat, timeString, name)
 		
 	elseif logtype == LIBCOMBAT_EVENT_BOSSHP then
 	
@@ -2954,7 +3011,7 @@ function lib:GetCombatLogString(fight, logline, fontsize)
 		
 		color = {.7,.7,.7}
 		
-		text = ZO_CachedStrFormat(stringFormat, timeString, bossName, percent, currenthp, maxhp)
+		text = ZO_CachedStrFormat(logFormat, timeString, bossName, percent, currenthp, maxhp)
 		
 	end
 
@@ -2994,7 +3051,7 @@ local function Initialize()
 
   if data.LoadCustomizations then data.LoadCustomizations() end
   
-  maxcrit = math.floor(100/GetCriticalStrikeChance(1))
+  maxcrit = mathfloor(100/GetCriticalStrikeChance(1))
 end
 
 Initialize()

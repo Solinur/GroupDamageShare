@@ -63,3 +63,7 @@
 [*]Reorganized libraries. They are now included as standalone.
 [*]Updated libraries
 [*]Some minor fixes and improvements
+
+0.3.1: DL: 45,762 (11.08.2019) 23:52
+[*]API Bump to Scalebreaker (100028)
+[*]Updated Libraries
