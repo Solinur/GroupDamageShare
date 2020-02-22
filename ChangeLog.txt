@@ -71,3 +71,8 @@
 0.3.2: DL: 48,421 (20.10.2019) 23:02
 [*] API Bump to Dragonhold (100029)
 [*] Info: The next update will remove bundled libraries.
+
+0.3.3: DL: 48,421 (20.10.2019) 23:02
+[*] API Bump to Dragonhold (100023)
+[*] Removed bundled Libraries. If you haven't already, you need to install the following Libraries yourself: LibAddonMenu, LibGroupSocket, LibMapPing, LibGPS and LibCombat
+[*] Code cleanup and small fixes
