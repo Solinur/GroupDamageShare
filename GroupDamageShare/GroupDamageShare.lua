@@ -19,7 +19,7 @@ local activelyHidden = false
 -- Addon Namespace
 GDS = GDS or {}
 GDS.name = "GroupDamageShare"
-local addonVersion 	= "0.3.3"
+local addonVersion 	= "0.3.4"
 
 local function Print(message, ...)
 

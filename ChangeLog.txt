@@ -76,3 +76,7 @@
 [*] API Bump to Harrowstorm (100030)
 [*] Removed bundled Libraries. If you haven't already, you need to install the following Libraries yourself: LibAddonMenu, LibGroupSocket, LibMapPing, LibGPS and LibCombat
 [*] Code cleanup and small fixes
+
+0.3.4: 55.990 (25.05.2020) 01:07
+[*] API Bump to Greymoor (100031)
+[*] This will be the final update. If you want to take the addon over, let me know.
